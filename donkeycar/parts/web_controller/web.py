@@ -157,7 +157,7 @@ class LocalWebController(tornado.web.Application):
                         wsclient.write_message(json.dumps(data))
                     except:
                         pass
-        
+
         return self.angle, self.throttle, self.mode, self.recording
 
     def run(self, img_arr=None):
@@ -202,7 +202,7 @@ class WebSocketDriveAPI(tornado.websocket.WebSocketHandler):
 
     def on_message(self, message):
         data = json.loads(message)
-        
+
         self.application.angle = data['angle']
         self.application.throttle = data['throttle']
         self.application.mode = data['drive_mode']
@@ -227,6 +227,10 @@ class WebSocketCalibrateAPI(tornado.websocket.WebSocketHandler):
             print(data['throttle'])
             self.application.throttle = data['throttle']
 
+        if 'angle' in data:
+            print(data['angle'])
+            self.application.angle = data['angle']
+
         if 'config' in data:
             config = data['config']
             if self.application.drive_train_type == "SERVO_ESC":
@@ -246,13 +250,12 @@ class WebSocketCalibrateAPI(tornado.websocket.WebSocketHandler):
                     self.application.drive_train['throttle'].min_pulse = config['THROTTLE_REVERSE_PWM']
 
             elif self.application.drive_train_type == "MM1":
-                if 'MM1_STEERING_MID' in config:
-                    self.application.drive_train.STEERING_MID = config['MM1_STEERING_MID']
-                if 'MM1_MAX_FORWARD' in config:
-                    self.application.drive_train.MAX_FORWARD = config['MM1_MAX_FORWARD']
-                if 'MM1_MAX_REVERSE' in config:
+                if ('MM1_STEERING_MID' in config) and (config['MM1_STEERING_MID'] != 0):
+                        self.application.drive_train.STEERING_MID = config['MM1_STEERING_MID']
+                if ('MM1_MAX_FORWARD' in config) and (config['MM1_MAX_FORWARD'] != 0):
+                        self.application.drive_train.MAX_FORWARD = config['MM1_MAX_FORWARD']
+                if ('MM1_MAX_REVERSE' in config) and (config['MM1_MAX_REVERSE'] != 0):
                     self.application.drive_train.MAX_REVERSE = config['MM1_MAX_REVERSE']
-
 
     def on_close(self):
         print("Client disconnected")
